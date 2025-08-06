@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim(htmlspecialchars($_POST["email"] ?? ''));
     $password = $_POST["password"] ?? '';
     $confirmPassword = $_POST["confirmPassword"] ?? '';
-    
+
 // strlen - le nombre des caracteres
     //  Vérification du nom
     if (empty($name)) {
@@ -29,10 +29,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     //  Vérification des mots de passe
     if (empty($password) || empty($confirmPassword)) {
         $erreurs[] = "Le mot de passe et la confirmation sont requis.";
-    } elseif ($password !== $confirmPassword) {
-        $erreurs[] = "Les mots de passe ne correspondent pas.";
     } elseif (strlen($password) < 6) {
         $erreurs[] = "Le mot de passe doit contenir au moins 6 caractères.";
+    }elseif ($password !== $confirmPassword) {
+        $erreurs[] = "Les mots de passe ne correspondent pas.";
     }
 }
 ?>
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/style/style.css">
 </head>
 <body>
     <section>
