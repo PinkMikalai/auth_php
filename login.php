@@ -53,13 +53,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $errors[] = "nous avons des problemes ma gueule: " . $e->getMessage();
         }
     }
-
-
 }
-
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="fr">
