@@ -16,6 +16,19 @@ if (isset($_GET['logout']) && $_GET['logout'] === '1') {
     session_destroy();
 
     //supprime les cookie
+    // Supprime le cookie de session
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+
+    // Exemple : si tu utilises un cookie "remember me"
+    if (isset($_COOKIE['remember_me'])) {
+        setcookie('remember_me', '', time() - 3600, '/');
+    }
 
     //si il est deco on le renvois sur la pas de logout surtout qu'il a pas le droit de rester ici 
     header('location: login.php');
