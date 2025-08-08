@@ -3,38 +3,58 @@ require_once 'assets/config/database.php';
 session_start(); // Nécessaire pour utiliser $_SESSION
 
 $errors = [];
+$message = [];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = trim(htmlspecialchars($_POST["email"])) ?? '';
+    $email = trim(htmlspecialchars($_POST["email"]) ?? '');
     $password = $_POST["password"] ?? '';
-    $pdo = dbConnexion();
-    // Vérification de l'email
-    if (empty($email)) {
-        $errors[] = "T'as pas mis ton email.";
-    }
 
-    // Vérification du mot de passe
     if (empty($password)) {
-        $errors[] = "T'as oublié ton mot de passe.";
+        $errors[] = "le mdp est obligatoire";
     }
-    // Si pas d'erreurs, on continue avec la vérification en base
-    if (empty($errors)) {
-        // on selection toutes les utilisateurs
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user) {
-            // Vérifie le mot de passe avec password_verify()
-            if (password_verify($password, $user['password'])) {
-                echo "GG bienvenue " . $email;
+    if (empty($email)) {
+        $errors[] = "l'email est obligatoire";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "votre adresse ne correspond au format mail classique";
+    }
+
+    if (empty($errors)) {
+        try {
+            //appel de la fonction de connexion a la db
+            $pdo = dbConnexion();
+            //prépare une requete sql (email dynamique)
+            $sql = "SELECT * FROM users WHERE email = ?";
+            //stock ma request préparée 
+            $requestDb = $pdo->prepare($sql);
+            //"execute la request en lui passant en parametre l'element dynamique
+            $requestDb->execute([$email]);
+            //recupération des données
+            $user = $requestDb->fetch();
+
+            if ($user) {
+                //verification
+                if (password_verify($password, $user["password"])) {
+                    $_SESSION["user_id"] = $user['id'];
+                    $_SESSION["username"] = $user['username'];
+                    $_SESSION["email"] = $user['email'];
+                    $_SESSION['loggin'] = true;
+
+                    $message = "super vous etes connecté " . htmlspecialchars($user['name']);
+                    header('location: home.php');
+                    exit();
+                } else {
+                    $errors[] = "mot de passe pas bon ma gueule";
+                }
             } else {
-                $errors[] = "Mot de passe incorrect.";
+                $errors[] = "compte introuvable ma gueule";
             }
-        } else {
-            $errors[] = "Aucun compte trouvé avec cet email.";
+        } catch (PDOException $e) {
+            $errors[] = "nous avons des problemes ma gueule: " . $e->getMessage();
         }
-    }   
+    }
+
+
 }
 
 ?>
@@ -43,24 +63,34 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>login</title>
     <link rel="stylesheet" href="assets/style/style.css">
 </head>
+
 <body>
     <section>
+        <h1>Se connecter a notre merveilleux site</h1>
+    <?php
+        if (!empty($errors)) {
+            foreach($errors as $error) {
+                echo $error;
+            }
+        }
+    ?>
         <form action="" method="POST">
             <?php
-                foreach ($errors as $error) {
-                    echo $error;
-                }
-                if(!empty($message)) {
-                    echo $message;
-                }
+            foreach ($errors as $error) {
+                echo $error;
+            }
+            if (!empty($message)) {
+                echo $message;
+            }
             ?>
-             <div>
+            <div>
                 <label for="email">Email</label>
                 <input type="email" name="email" id="email" required placeholder="Entrez votre email">
             </div>
@@ -74,4 +104,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </form>
     </section>
 </body>
+
 </html>
